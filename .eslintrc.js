@@ -19,9 +19,10 @@ module.exports = {
     },
   ],
   parserOptions: {
-    ecmaVersion: 'latest',
+    ecmaFeatures: { jsx: true },
+    ecmaVersion: "latest",
+    sourceType: "module",
   },
-  rules: {
-    'no-underscore-dangle': ['error', { allow: ['_id'] }],
-  },
+  plugins: ["react"],
+  rules: { "no-underscore-dangle": "off" },
 };

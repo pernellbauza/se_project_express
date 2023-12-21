@@ -1,5 +1,7 @@
 const { default: mongoose } = require("mongoose");
+
 const user = require("../models/user");
+
 const { HTTP_BAD_REQUEST, HTTP_NOT_FOUND } = require("../utils/error");
 
 const createUser = (req, res, next) => {
@@ -23,10 +25,8 @@ const createUser = (req, res, next) => {
 };
 
 const getUsers = (req, res, next) => {
-  const { ObjectId } = req.params;
   user
-    .find({ ObjectId })
-    .orFail()
+    .find({})
     .then((item) => res.status(200).send({ data: item }))
     .catch((e) => {
       next(e);
