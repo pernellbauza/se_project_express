@@ -58,7 +58,7 @@ const createUser = async (req, res, next) => {
   }
 };
 
-const updateUsers = (req, res) => {
+const updateUser = (req, res) => {
   const { userId } = req.params;
   const { avatar } = req.body;
   const { name } = req.body;
