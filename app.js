@@ -8,7 +8,7 @@ const app = express();
 
 const cors = require("cors");
 
-const { globalErrorHandler } = require("./controllers/errorController");
+const { login, createUser } = require("./controllers/user");
 
 mongoose.connect('mongodb://127.0.0.1:27017/wtwr_db')
 .then(() => {
@@ -22,6 +22,10 @@ app.use(express.json());
 
 app.use(cors());
 
+app.post("/signin", login);
+
+app.post("/signup", createUser);
+
 //app.use((req, res, next) => {
 //  req.user = {
 //    _id: "6581259492ae6b84fd920b4b",
@@ -30,9 +34,6 @@ app.use(cors());
 //});
 
 app.use(routes, require("./routes/index"));
-
-app.use(globalErrorHandler);
-
 
 app.listen(PORT, () => {
   console.log(`app listening at port ${PORT}`);
