@@ -16,11 +16,15 @@ const {
 } = require("../controllers/user");
 
 router.use("/signin", login);
-router.use("/signup", createUser);
+
+router.use("/signup", userValidation, createUser);
+
 router.use("/items", clothingItem);
 
 router.use("/users", auth, user);
+
 router.use("/users/me", auth, getCurrentUser);
+
 router.patch("/users/me", auth, updateUser);
 
 

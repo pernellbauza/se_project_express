@@ -2,7 +2,13 @@ const { default: mongoose } = require("mongoose");
 
 const user = require("../models/user");
 
-const { HTTP_BAD_REQUEST, HTTP_NOT_FOUND, HTTP_CONFLICT, HTTP_INTERNAL_SERVER_ERROR, } = require("../utils/error");
+const { HTTP_BAD_REQUEST,
+  HTTP_UNAUTHORIZED,
+  HTTP_FORBIDDEN,
+  HTTP_NOT_FOUND,
+  HTTP_CONFLICT,
+  HTTP_INTERNAL_SERVER_ERROR,
+  } = require("../utils/error");
 
 const { JWT_SECRET } = require("../utils/config");
 
@@ -10,52 +16,35 @@ const bcrypt = require("bcryptjs");
 
 const jwt = require("jsonwebtoken");
 
-const e = require("express");
-
-const createUser = async (req, res, next) => {
-  try {
-    const { name, avatar, email, password } = req.body;
-    const hash = await bcrypt.hash(password, 10);
-
-    if (name.length == 2 || name.length > 30) {
-      const validationError = new Error("validation error");
-      validationError.statusCode = HTTP_BAD_REQUEST;
-      throw validationError;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email || !emailRegex.test(email)) {
-      const validationError = new Error("Email cannot be empty");
-      validationError.statusCode = HTTP_BAD_REQUEST;
-      throw validationError;
-    }
-
-    const existingUser = await user.findOne({ email });
-    if (existingUser) {
-      const duplicateEmailError = new Error("Email already exsits");
-      duplicateEmailError.statusCode = HTTP_CONFLICT;
-      throw duplicateEmailError;
-    }
-
-    const newUser = await user.create({
-      name,
-      avatar,
-      email,
-      password: hash,
-    });
-
-    const responseData = {
-      newUser: {
-        name: newUser.name,
-        avatar: newUser.avatar,
-        email: newUser.email,
-      },
-    };
-
-    res.send(responseData);
-  } catch (e) {
-    next(e);
+const createUser = (req, res) => {
+  const { name, avatar, email, password } = req.body;
+  if (!email) {
+    res
+      .status(HTTP_BAD_REQUEST)
+      .send({ message: "Cannot create user with no email" });
   }
+
+  User.findOne({ email })
+    .then((user) => {
+      if (user) {
+        return Promise.reject(new Error("User with email already exists"));
+      }
+      return bcrypt.hash(password, 10);
+    })
+    .then((hash) => User.create({ name, avatar, email, password: hash }))
+    .then(() => res.send({ name, avatar, email }))
+    .catch((err) => {
+      console.log(err.message);
+      if (err.message === "User with email already exists") {
+        res.status(HTTP_CONFLICT).send({ message: "User already exists" });
+      } else if (err.name === `ValidationError`) {
+        res
+          .status(HTTP_BAD_REQUEST)
+          .send({ message: "Invalid request error on createUser" });
+      } else {
+        res.status(HTTP_INTERNAL_SERVER_ERROR).send({ message: "Error from createUser" });
+      }
+    });
 };
 
 const updateUser = (req, res) => {
@@ -66,9 +55,9 @@ const updateUser = (req, res) => {
   user
     .findByIdAndUpdate(userId, { $set: { avatar } }, { new: true })
     .orFail()
-    .then((user) => res.status(200).send({ data: user }))
+    .then((user) => res.status(HTTP_OK_REQUEST).send({ data: user }))
     .catch((e) => {
-      res.status(500).send({ message: "Error from update user", e });
+      res.status(HTTP_INTERNAL_SERVER_ERROR).send({ message: "Error from update user", e });
     });
 };
 
@@ -109,9 +98,9 @@ const login = (req, res, next) => {
     .catch((e) => {
       console.error(e);
       if (e.name === "INVALID_EMAIL_PASSWORD") {
-        return res.status(400).send({ message: e.message });
+        return res.status(HTTP_BAD_REQUEST).send({ message: e.message });
       } else {
-        res.status(401).send({ message: e.message });
+        res.status(HTTP_UNAUTHORIZED).send({ message: e.message });
       }
     });
 };
