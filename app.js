@@ -33,7 +33,7 @@ app.post("/signup", createUser);
 //  next();
 //});
 
-app.use(routes, require("./routes/index"));
+app.use(routes);
 
 app.listen(PORT, () => {
   console.log(`app listening at port ${PORT}`);
