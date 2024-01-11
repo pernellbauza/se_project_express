@@ -5,11 +5,11 @@ const ClothingItem = require("../models/clothingItem");
 const {
   HTTP_BAD_REQUEST,
   HTTP_NOT_FOUND,
-  HTTP_OK_REQUEST,
+  HTTP_FORBIDDEN,
   HTTP_INTERNAL_SERVER_ERROR,
 } = require("../utils/error");
 
-module.exports.createItem = (req, res, next) => {
+module.exports.createItem = (req, res) => {
   console.log(req.user._id);
   console.log(req);
   console.log(res.body);
@@ -41,18 +41,38 @@ module.exports.getItems = (req, res, next) => {
 
 module.exports.deleteItem = (req, res) => {
   const { itemId } = req.params;
+  const userId = req.user._id;
+  console.log(itemId);
 
   ClothingItem.findById(itemId)
-  .orFail()
-  .then((item) => {
-    if (item.owner !== req.user._id) {
-      return res
-        .status(ERRORS.FORBIDDEN)
-        .send({ message: "You are not authorized to delete this item" });
-    }
-      return item.deleteOne().then(() => res.send({ message: "Item deleted" }));
-  })
-  .catch((e) => itemError(req, res, e));
+    .orFail()
+    .then((item) => {
+      if (!item.owner.equals(userId)) {
+        return Promise.reject(new Error("Not authorized to delete item"));
+      }
+      return ClothingItem.findByIdAndDelete(itemId).then(() => {
+        res.send({ message: `Item ${itemId} deleted` });
+      });
+    })
+    .catch((err) => {
+      console.log(err.name);
+      if (err.message === "Not authorized to delete item") {
+        return res
+          .status(HTTP_FORBIDDEN)
+          .send({ message: "Not authorized to delete item" });
+      }
+      if (err.name === `DocumentNotFoundError`) {
+        return res
+          .status(HTTP_NOT_FOUND)
+          .send({ message: `${err.name} error on deleteItem` });
+      }
+      if (err.name === `CastError`) {
+        return res
+          .status(HTTP_BAD_REQUEST)
+          .send({ message: `${err.name} error on deleteItem` });
+      }
+      return res.status(HTTP_INTERNAL_SERVER_ERROR).send({ message: "deleteItem failed" });
+    });
 };
 
 module.exports.likeItem = (req, res, next) => {

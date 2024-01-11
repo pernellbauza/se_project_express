@@ -50,7 +50,7 @@ const updateUser = (req, res) => {
   const { userId } = req.params;
   const { name, avatar } = req.body;
 
-  user
+  User
     .findByIdAndUpdate(userId, { $set: { name, avatar } },
       { new: true, runValidators: true })
     .orFail()
@@ -60,7 +60,7 @@ const updateUser = (req, res) => {
         res
           .status(HTTP_BAD_REQUEST)
           .send({ message: `${e.name} error on getCurrentUser` });
-      } else if (err.name === "DocumentNotFoundError") {
+      } else if (e.name === "DocumentNotFoundError") {
         res
           .status(HTTP_NOT_FOUND)
           .send({ message: `${e.name} error on getCurrentUser` });
@@ -73,21 +73,12 @@ const updateUser = (req, res) => {
 };
 
 const getCurrentUser = (req, res) => {
-  const id = req.user._id;
+  const userId = req.user._id;
 
-  user
-    .findById(id)
+  User
+    .findById(userId)
     .orFail()
-    .then((user) => {
-      if (!user) {
-        return res.status(HTTP_NOT_FOUND).json({ error: "User not found" });
-      }
-      const { id, name, avatar, email } = user;
-      const userResponse = { id, name, avatar, email };
-
-      res.json(userResponse);
-      console.log(userResponse);
-    })
+    .then((user) => res.send(user))
     .catch((e) => {
       console.error("Error fetching user from the database: ", e);
       res
@@ -98,7 +89,7 @@ const getCurrentUser = (req, res) => {
 
 const login = (req, res) => {
   const { email, password } = req.body;
-  return user
+  return User
     .findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
@@ -107,12 +98,11 @@ const login = (req, res) => {
       res.send({ token });
     })
     .catch((e) => {
-      console.error(e);
+      console.log(e.name);
       if (e.name === "Incorrect email or password") {
         return res.status(HTTP_UNAUTHORIZED).send({ message: e.message });
-      } else {
-        res.status(HTTP_INTERNAL_SERVER_ERROR).send({ message: e.message });
       }
+        return res.status(HTTP_INTERNAL_SERVER_ERROR).send({ message: e.message });
     });
 };
 
