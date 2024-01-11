@@ -96,7 +96,7 @@ const getCurrentUser = (req, res) => {
     });
 };
 
-const login = (req, res, next) => {
+const login = (req, res) => {
   const { email, password } = req.body;
   return user
     .findUserByCredentials(email, password)
