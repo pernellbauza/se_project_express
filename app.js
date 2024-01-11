@@ -10,11 +10,7 @@ const cors = require("cors");
 
 const { login, createUser } = require("./controllers/user");
 
-mongoose.connect('mongodb://127.0.0.1:27017/wtwr_db')
-.then(() => {
-  console.log("Connected to DB");
-})
-.catch((e) => console.error(e));
+mongoose.connect('mongodb://127.0.0.1:27017/wtwr_db');
 
 const routes = require("./routes");
 

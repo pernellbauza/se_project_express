@@ -1,20 +1,19 @@
-const { default: mongoose } = require("mongoose");
+const jwt = require("jsonwebtoken");
 
-const user = require("../models/user");
+const bcrypt = require("bcryptjs");
 
-const { HTTP_BAD_REQUEST,
+const User = require("../models/user");
+
+const {
+  HTTP_OK_REQUEST,
+  HTTP_BAD_REQUEST,
   HTTP_UNAUTHORIZED,
-  HTTP_FORBIDDEN,
   HTTP_NOT_FOUND,
   HTTP_CONFLICT,
   HTTP_INTERNAL_SERVER_ERROR,
   } = require("../utils/error");
 
 const { JWT_SECRET } = require("../utils/config");
-
-const bcrypt = require("bcryptjs");
-
-const jwt = require("jsonwebtoken");
 
 const createUser = (req, res) => {
   const { name, avatar, email, password } = req.body;
