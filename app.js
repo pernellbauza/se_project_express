@@ -26,13 +26,6 @@ app.post("/signin", login);
 
 app.post("/signup", createUser);
 
-//app.use((req, res, next) => {
-//  req.user = {
-//    _id: "6581259492ae6b84fd920b4b",
-//  };
-//  next();
-//});
-
 app.use(routes);
 
 app.listen(PORT, () => {
