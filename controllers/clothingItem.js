@@ -6,6 +6,7 @@ const {
   HTTP_BAD_REQUEST,
   HTTP_NOT_FOUND,
   HTTP_OK_REQUEST,
+  HTTP_INTERNAL_SERVER_ERROR,
 } = require("../utils/error");
 
 module.exports.createItem = (req, res, next) => {
@@ -22,11 +23,11 @@ module.exports.createItem = (req, res, next) => {
     })
     .catch((e) => {
       if (e.name === "ValidationError") {
-        const validationError = new Error(e.message);
-        validationError.statusCode = HTTP_BAD_REQUEST;
-        next(validationError);
+        return res
+          .status(HTTP_BAD_REQUEST)
+          .send({ message: "Invalid request error on createItem" });
       }
-      next(e);
+      return res.status(HTTP_INTERNAL_SERVER_ERROR).send({ message: "Error from createItem" });
     });
 };
 
@@ -38,25 +39,20 @@ module.exports.getItems = (req, res, next) => {
     });
 };
 
-module.exports.deleteItem = (req, res, next) => {
+module.exports.deleteItem = (req, res) => {
   const { itemId } = req.params;
 
-  ClothingItem.findByIdAndDelete(itemId)
-    .orFail()
-    .then((item) => res.status(HTTP_OK_REQUEST).send({ item })) // response should not be empty
-    .catch((e) => {
-      if (e instanceof mongoose.CastError) {
-        const castError = new Error(e.message);
-        castError.statusCode = HTTP_BAD_REQUEST;
-        next(castError);
-      } else if (e instanceof mongoose.Error.DocumentNotFoundError) {
-        const notFoundError = new Error(e.message);
-        notFoundError.statusCode = HTTP_NOT_FOUND;
-        next(notFoundError);
-      } else {
-        next(e);
-      }
-    });
+  ClothingItem.findById(itemId)
+  .orFail()
+  .then((item) => {
+    if (item.owner !== req.user._id) {
+      return res
+        .status(ERRORS.FORBIDDEN)
+        .send({ message: "You are not authorized to delete this item" });
+    }
+      return item.deleteOne().then(() => res.send({ message: "Item deleted" }));
+  })
+  .catch((e) => itemError(req, res, e));
 };
 
 module.exports.likeItem = (req, res, next) => {

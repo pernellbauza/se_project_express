@@ -48,15 +48,27 @@ const createUser = (req, res) => {
 
 const updateUser = (req, res) => {
   const { userId } = req.params;
-  const { avatar } = req.body;
-  const { name } = req.body;
+  const { name, avatar } = req.body;
 
   user
-    .findByIdAndUpdate(userId, { $set: { avatar } }, { new: true })
+    .findByIdAndUpdate(userId, { $set: { name, avatar } },
+      { new: true, runValidators: true })
     .orFail()
     .then((user) => res.status(HTTP_OK_REQUEST).send({ data: user }))
     .catch((e) => {
-      res.status(HTTP_INTERNAL_SERVER_ERROR).send({ message: "Error from update user", e });
+      if (e.name === "ValidationError") {
+        res
+          .status(HTTP_BAD_REQUEST)
+          .send({ message: `${e.name} error on getCurrentUser` });
+      } else if (err.name === "DocumentNotFoundError") {
+        res
+          .status(HTTP_NOT_FOUND)
+          .send({ message: `${e.name} error on getCurrentUser` });
+      } else {
+        res
+          .status(HTTP_INTERNAL_SERVER_ERROR)
+          .send({ message: `${e.name} error on updateProfile` });
+      }
     });
 };
 
@@ -96,10 +108,10 @@ const login = (req, res, next) => {
     })
     .catch((e) => {
       console.error(e);
-      if (e.name === "INVALID_EMAIL_PASSWORD") {
-        return res.status(HTTP_BAD_REQUEST).send({ message: e.message });
+      if (e.name === "Incorrect email or password") {
+        return res.status(HTTP_UNAUTHORIZED).send({ message: e.message });
       } else {
-        res.status(HTTP_UNAUTHORIZED).send({ message: e.message });
+        res.status(HTTP_INTERNAL_SERVER_ERROR).send({ message: e.message });
       }
     });
 };
