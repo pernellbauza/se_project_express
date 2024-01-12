@@ -99,11 +99,12 @@ const login = (req, res) => {
     })
     .catch((e) => {
       console.log(e.name);
-      if (e.name === "INVALID_EMAIL_PASSWORD") {
-        return res.status(HTTP_BAD_REQUEST).send({ message: e.message });
-      } else {
-        res.status(HTTP_UNAUTHORIZED).send({ message: e.message });
+      if (e.message === "Incorrect email or password") {
+        return res.status(HTTP_UNAUTHORIZED).send({ message: `${e.message}` });
       }
+      return res
+        .status(HTTP_INTERNAL_SERVER_ERROR)
+        .send({ message: `${e.name} error on login` });
     });
 };
 
