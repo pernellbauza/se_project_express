@@ -1,5 +1,3 @@
-const { default: mongoose } = require("mongoose");
-
 const ClothingItem = require("../models/clothingItem");
 
 const {
@@ -75,50 +73,62 @@ module.exports.deleteItem = (req, res) => {
     });
 };
 
-module.exports.likeItem = (req, res, next) => {
-  console.log(req.params.itemId);
+module.exports.likeItem = (req, res) => {
   console.log(req.user._id);
+  const userId = req.user._id;
+  const { itemId } = req.params;
+
   ClothingItem.findByIdAndUpdate(
-    req.params.itemId,
-    { $addToSet: { likes: req.user._id } },
+    itemId,
+    { $addToSet: { likes: userId } },
     { new: true },
   )
     .orFail()
-    .then((item) => res.status(200).send({ data: item }))
-    .catch((e) => {
-      if (e instanceof mongoose.CastError) {
-        const castError = new Error(e.message);
-        castError.statusCode = HTTP_BAD_REQUEST;
-        next(castError);
-      } else if (e instanceof mongoose.Error.DocumentNotFoundError) {
-        const notFoundError = new Error(e.message);
-        notFoundError.statusCode = HTTP_NOT_FOUND;
-        next(notFoundError);
-      } else {
-        next(e);
+    .then((item) => {
+      res.send({ data: item });
+    })
+    .catch((err) => {
+      console.error(err.name);
+      if (err.name === `DocumentNotFoundError`) {
+        return res
+          .status(HTTP_NOT_FOUND)
+          .send({ message: `${err.name} error on likeItem` });
       }
+      if (err.name === `CastError`) {
+        return res
+          .status(HTTP_BAD_REQUEST)
+          .send({ message: `${err.name} error on likeItem` });
+      }
+      return res.status(HTTP_INTERNAL_SERVER_ERROR).send({ message: "likeItem failed" });
     });
 };
 
-module.exports.dislikeItem = (req, res, next) => {
+module.exports.dislikeItem = (req, res) => {
+  console.log(req.user._id);
+  const userId = req.user._id;
+  const { itemId } = req.params;
+
   ClothingItem.findByIdAndUpdate(
-    req.params.itemId,
-    { $pull: { likes: req.user._id } },
+    itemId,
+    { $pull: { likes: userId } }, // remove _id from the array
     { new: true },
   )
     .orFail()
-    .then((item) => res.status(200).send({ data: item }))
-    .catch((e) => {
-      if (e instanceof mongoose.CastError) {
-        const castError = new Error(e.message);
-        castError.statusCode = HTTP_BAD_REQUEST;
-        next(castError);
-      } else if (e instanceof mongoose.Error.DocumentNotFoundError) {
-        const notFoundError = new Error(e.message);
-        notFoundError.statusCode = HTTP_NOT_FOUND;
-        next(notFoundError);
-      } else {
-        next(e);
+    .then((item) => {
+      res.send({ data: item });
+    })
+    .catch((err) => {
+      console.error(err);
+      if (err.name === `DocumentNotFoundError`) {
+        return res
+          .status(HTTP_NOT_FOUND)
+          .send({ message: `${err.name} error on dislikeItem` });
       }
+      if (err.name === `CastError`) {
+        return res
+          .status(HTTP_BAD_REQUEST)
+          .send({ message: `${err.name} error on dislikeItem` });
+      }
+      return res.status(HTTP_INTERNAL_SERVER_ERROR).send({ message: "dislikeItem failed" });
     });
 };
