@@ -51,7 +51,7 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(
       console.log(password);
       if (!password || !email) {
         const error = new Error("incorrect email or password");
-        error.name = "INVALID_EMAIL_PASSWORD";
+        error.name = "NO_EMAIL_PASSWORD";
         return Promise.reject(error);
       }
       // found
