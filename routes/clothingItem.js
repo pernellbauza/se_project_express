@@ -12,16 +12,16 @@ const {
 // Crud
 
 // Create
-router.post("/", createItem);
+router.post("/", auth, createItem);
 
 // read
 router.get("/", getItems);
 
 // update
-router.put("/:itemId/likes", likeItem);
+router.put("/:itemId/likes", auth, likeItem);
 
 // delete
-router.delete("/:itemId", deleteItem);
+router.delete("/:itemId", auth, deleteItem);
 
 router.delete("/:itemId/likes", auth, dislikeItem);
 
