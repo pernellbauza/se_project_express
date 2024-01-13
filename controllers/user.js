@@ -89,6 +89,12 @@ const getCurrentUser = (req, res) => {
 
 const login = (req, res) => {
   const { email, password } = req.body;
+  if (!email || !password) {
+    return res
+      .status(HTTP_BAD_REQUEST)
+      .send({ message: "Email and or password field is empty" });
+  }
+
   return User
     .findUserByCredentials(email, password)
     .then((user) => {
