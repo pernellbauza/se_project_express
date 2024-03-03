@@ -23,5 +23,8 @@ module.exports = {
     ecmaVersion: "latest",
     sourceType: "module",
   },
-  rules: { "no-underscore-dangle": "off" },
+  rules: {
+    "no-underscore-dangle": "off",
+    "no-unused-vars": ["error", { "argsIgnorePattern": "next" }]
+  },
 };
