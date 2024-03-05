@@ -4,14 +4,13 @@ const bcrypt = require("bcryptjs");
 
 const User = require("../models/user");
 
-const {
-  HTTP_OK_REQUEST,
-  HTTP_BAD_REQUEST,
-  HTTP_UNAUTHORIZED,
-  HTTP_NOT_FOUND,
-  HTTP_CONFLICT,
-  HTTP_INTERNAL_SERVER_ERROR,
-  } = require("../utils/error");
+const { BadRequestError } = require("../utils/BadRequestError");
+
+const { ConflictError } = require("../utils/ConflictError");
+
+const { NotFoundError } = require("../utils/NotFoundError");
+
+const { UnauthorizedError } = require("../utils/UnauthorizedError");
 
 const { JWT_SECRET } = require("../utils/config");
 
@@ -19,7 +18,7 @@ const createUser = (req, res) => {
   const { name, avatar, email, password } = req.body;
   if (!email) {
     res
-      .status(HTTP_BAD_REQUEST)
+      .status(BadRequestError)
       .send({ message: "Cannot create user with no email" });
   }
 
@@ -35,10 +34,10 @@ const createUser = (req, res) => {
     .catch((err) => {
       console.log(err.message);
       if (err.message === "User with email already exists") {
-        res.status(HTTP_CONFLICT).send({ message: "User already exists" });
+        res.status(ConflictError).send({ message: "User already exists" });
       } else if (err.name === `ValidationError`) {
         res
-          .status(HTTP_BAD_REQUEST)
+          .status(BadRequestError)
           .send({ message: "Invalid request error on createUser" });
       } else {
         res.status(HTTP_INTERNAL_SERVER_ERROR).send({ message: "Error from createUser" });
@@ -55,19 +54,17 @@ const updateUser = (req, res) => {
       { new: true, runValidators: true })
     .orFail()
     .then((user) => res.status(HTTP_OK_REQUEST).send({ data: user }))
-    .catch((e) => {
-      if (e.name === "ValidationError") {
+    .catch((err) => {
+      if (err.name === "ValidationError") {
         res
-          .status(HTTP_BAD_REQUEST)
-          .send({ message: `${e.name} error on getCurrentUser` });
-      } else if (e.name === "DocumentNotFoundError") {
+          .status(BadRequestError)
+          .send({ message: `${err.name} error on getCurrentUser` });
+      } else if (err.name === "DocumentNotFoundError") {
         res
-          .status(HTTP_NOT_FOUND)
-          .send({ message: `${e.name} error on getCurrentUser` });
+          .status(NotFoundError)
+          .send({ message: `${err.name} error on getCurrentUser` });
       } else {
-        res
-          .status(HTTP_INTERNAL_SERVER_ERROR)
-          .send({ message: `${e.name} error on updateProfile` });
+        next(err);
       }
     });
 };
@@ -79,10 +76,10 @@ const getCurrentUser = (req, res) => {
     .findById(userId)
     .orFail()
     .then((user) => res.send(user))
-    .catch((e) => {
-      console.error("Error fetching user from the database: ", e);
+    .catch((err) => {
+      console.error("Error fetching user from the database: ", err);
       res
-        .status(HTTP_INTERNAL_SERVER_ERROR)
+        .status(NotFoundError)
         .json({ error: "Internal server error" });
     });
 };
@@ -91,7 +88,7 @@ const login = (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res
-      .status(HTTP_BAD_REQUEST)
+      .status(BadRequestError)
       .send({ message: "Email and or password field is empty" });
   }
 
@@ -103,14 +100,13 @@ const login = (req, res) => {
       });
       res.send({ token });
     })
-    .catch((e) => {
-      console.log(e.name);
-      if (e.message === "Incorrect email or password") {
-        return res.status(HTTP_UNAUTHORIZED).send({ message: `${e.message}` });
+    .catch((err) => {
+      console.log(err.name);
+      if (err.message === "Incorrect email or password") {
+        return res.status(UnauthorizedError).send({ message: `${err.message}` });
+      } else {
+        next(err);
       }
-      return res
-        .status(HTTP_INTERNAL_SERVER_ERROR)
-        .send({ message: `${e.name} error on login` });
     });
 };
 
