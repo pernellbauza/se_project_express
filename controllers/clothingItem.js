@@ -1,11 +1,10 @@
 const ClothingItem = require("../models/clothingItem");
 
-const {
-  HTTP_BAD_REQUEST,
-  HTTP_NOT_FOUND,
-  HTTP_FORBIDDEN,
-  HTTP_INTERNAL_SERVER_ERROR,
-} = require("../utils/error");
+const { BadRequestError } = require("../utils/BadRequestError");
+
+const { ForbiddenError } = require("../utils/ForbiddenError");
+
+const { NotFoundError } = require("../utils/NotFoundError");
 
 module.exports.createItem = (req, res) => {
   console.log(req.user._id);
@@ -19,22 +18,20 @@ module.exports.createItem = (req, res) => {
       console.log(item);
       res.send({ data: item });
     })
-    .catch((e) => {
-      if (e.name === "ValidationError") {
-        return res
-          .status(HTTP_BAD_REQUEST)
-          .send({ message: "Invalid request error on createItem" });
-      }
-      return res.status(HTTP_INTERNAL_SERVER_ERROR).send({ message: "Error from createItem" });
-    });
+    .catch((err) => {
+      if (err.name === "ValidationError") {
+          next(new BadRequestError("Invalid data"));
+        }
+        next(err);
+      });
 };
 
 module.exports.getItems = (req, res, next) => {
   ClothingItem.find({})
-    .then((items) => res.status(200).send(items))
-    .catch((e) => {
-      next(e);
-    });
+  .then((items) => res.send(items))
+  .catch((err) => {
+    next(err);
+  });
 };
 
 module.exports.deleteItem = (req, res) => {
@@ -46,30 +43,20 @@ module.exports.deleteItem = (req, res) => {
     .orFail()
     .then((item) => {
       if (!item.owner.equals(userId)) {
-        return Promise.reject(new Error("Not authorized to delete item"));
+        throw new ForbiddenError("You are not authorized to delete this item");
       }
       return ClothingItem.findByIdAndDelete(itemId).then(() => {
         res.send({ message: `Item ${itemId} deleted` });
       });
     })
     .catch((err) => {
-      console.log(err.name);
-      if (err.message === "Not authorized to delete item") {
-        return res
-          .status(HTTP_FORBIDDEN)
-          .send({ message: "Not authorized to delete item" });
-      }
       if (err.name === `DocumentNotFoundError`) {
-        return res
-          .status(HTTP_NOT_FOUND)
-          .send({ message: `${err.name} error on deleteItem` });
+        next(new NotFoundError());
       }
       if (err.name === `CastError`) {
-        return res
-          .status(HTTP_BAD_REQUEST)
-          .send({ message: `${err.name} error on deleteItem` });
+        next(new BadRequestError("Invalid data"));
       }
-      return res.status(HTTP_INTERNAL_SERVER_ERROR).send({ message: "deleteItem failed" });
+      next(err);
     });
 };
 
@@ -90,16 +77,12 @@ module.exports.likeItem = (req, res) => {
     .catch((err) => {
       console.error(err.name);
       if (err.name === `DocumentNotFoundError`) {
-        return res
-          .status(HTTP_NOT_FOUND)
-          .send({ message: `${err.name} error on likeItem` });
+        next(new NotFoundError());
       }
       if (err.name === `CastError`) {
-        return res
-          .status(HTTP_BAD_REQUEST)
-          .send({ message: `${err.name} error on likeItem` });
+        next(new BadRequestError("Invalid data"));
       }
-      return res.status(HTTP_INTERNAL_SERVER_ERROR).send({ message: "likeItem failed" });
+      next(err);
     });
 };
 
@@ -120,15 +103,11 @@ module.exports.dislikeItem = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.name === `DocumentNotFoundError`) {
-        return res
-          .status(HTTP_NOT_FOUND)
-          .send({ message: `${err.name} error on dislikeItem` });
+        next(new NotFoundError());
       }
       if (err.name === `CastError`) {
-        return res
-          .status(HTTP_BAD_REQUEST)
-          .send({ message: `${err.name} error on dislikeItem` });
+        next(new BadRequestError("Invalid data"));
       }
-      return res.status(HTTP_INTERNAL_SERVER_ERROR).send({ message: "dislikeItem failed" });
+      next(err);
     });
 };
