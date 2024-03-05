@@ -25,6 +25,12 @@ const app = express();
 
 app.use(express.json());
 
+app.get("/crash-test", () => {
+  setTimeout(() => {
+    throw new Error("Server will crash now");
+  }, 0);
+});
+
 app.use(cors());
 
 app.post("/signin", validateAuth, login);
