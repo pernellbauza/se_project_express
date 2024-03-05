@@ -24,7 +24,7 @@ module.exports = {
     sourceType: "module",
   },
   rules: {
-    "no-underscore-dangle": "off",
-    "no-unused-vars": ["error", { "argsIgnorePattern": "next" }]
+    "no-underscore-dangle": ["error", { allow: ["_id"] }],
+    "no-unused-vars": ["error", { argsIgnorePattern: "next" }],
   },
 };

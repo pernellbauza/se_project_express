@@ -4,8 +4,6 @@ const mongoose = require('mongoose');
 
 const cors = require("cors");
 
-const { PORT = 3001 } = process.env;
-
 const { login, createUser } = require("./controllers/user");
 
 const { errors } = require("celebrate");
@@ -23,6 +21,8 @@ const routes = require("./routes");
 
 const app = express();
 
+const { PORT = 3001 } = process.env;
+
 app.use(express.json());
 
 app.get("/crash-test", () => {
@@ -33,11 +33,11 @@ app.get("/crash-test", () => {
 
 app.use(cors());
 
+app.use(requestLogger);
+
 app.post("/signin", validateAuth, login);
 
 app.post("/signup", validateCreateUser, createUser);
-
-app.use(requestLogger);
 
 app.use(routes);
 
