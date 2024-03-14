@@ -18,7 +18,6 @@
   "bugs": {
     "url": "https://github.com/pernellbauza/se_project_express/issues"
   },
-  "homepage": "https://github.com/pernellbauza/se_project_express#readme",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "celebrate": "^15.0.3",
