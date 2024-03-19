@@ -6,11 +6,8 @@ const { ForbiddenError } = require("../utils/ForbiddenError");
 
 const { NotFoundError } = require("../utils/NotFoundError");
 
-module.exports.createItem = (req, res) => {
+const createItem = (req, res, next) => {
   console.log(req.user._id);
-  console.log(req);
-  console.log(res.body);
-
   const { name, weather, imageUrl } = req.body;
 
   ClothingItem.create({ name, weather, imageUrl, owner: req.user._id })
@@ -19,22 +16,23 @@ module.exports.createItem = (req, res) => {
       res.send({ data: item });
     })
     .catch((err) => {
-      if (err.name === "ValidationError") {
-          next(new BadRequestError("Invalid data"));
-        }
-        next(err);
-      });
+      console.error(err);
+      if (err.name === `ValidationError`) {
+        next(new BadRequestError("Invalid data"));
+      }
+      next(err);
+    });
 };
 
-module.exports.getItems = (req, res, next) => {
+const getItems = (req, res, next) => {
   ClothingItem.find({})
-  .then((items) => res.send(items))
-  .catch((err) => {
-    next(err);
-  });
+    .then((items) => res.send(items))
+    .catch((err) => {
+      next(err);
+    });
 };
 
-module.exports.deleteItem = (req, res) => {
+const deleteItem = (req, res, next) => {
   const { itemId } = req.params;
   const userId = req.user._id;
   console.log(itemId);
@@ -60,7 +58,7 @@ module.exports.deleteItem = (req, res) => {
     });
 };
 
-module.exports.likeItem = (req, res) => {
+const likeItem = (req, res, next) => {
   console.log(req.user._id);
   const userId = req.user._id;
   const { itemId } = req.params;
@@ -86,14 +84,14 @@ module.exports.likeItem = (req, res) => {
     });
 };
 
-module.exports.dislikeItem = (req, res) => {
+const dislikeItem = (req, res, next) => {
   console.log(req.user._id);
   const userId = req.user._id;
   const { itemId } = req.params;
 
   ClothingItem.findByIdAndUpdate(
     itemId,
-    { $pull: { likes: userId } }, // remove _id from the array
+    { $pull: { likes: userId } },
     { new: true },
   )
     .orFail()
@@ -110,4 +108,12 @@ module.exports.dislikeItem = (req, res) => {
       }
       next(err);
     });
+};
+
+module.exports = {
+  createItem,
+  getItems,
+  deleteItem,
+  likeItem,
+  dislikeItem,
 };
