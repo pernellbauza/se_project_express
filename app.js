@@ -23,7 +23,7 @@ const app = express();
 
 const { PORT = 3001 } = process.env;
 
-app.use(cors());
+
 
 app.use(express.json());
 
@@ -33,7 +33,7 @@ app.get("/crash-test", () => {
   }, 0);
 });
 
-
+app.use(cors());
 
 app.use(requestLogger);
 
