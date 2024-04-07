@@ -71,7 +71,7 @@ const updateProfile = (req, res, next) => {
 
       if (err.name === "ValidationError") {
         next(new BadRequestError("Invalid data"));
-      } else if (err.name === "DocumentNotFoundError") {
+      } else if (err.name === "NotFoundError") {
         next(new NotFoundError("User not found"));
       } else {
         next(err);
