@@ -9,8 +9,6 @@ const cors = require("cors");
 
 const { errors } = require("celebrate");
 
-const routes = require("./routes");
-
 const { login, createUser } = require("./controllers/user");
 
 const { errorHandler } = require("./middlewares/error-handler");
@@ -21,6 +19,8 @@ const {
   validateAuth,
   validateCreateUser,
 } = require("./middlewares/validation");
+
+const routes = require("./routes");
 
 const app = express();
 
