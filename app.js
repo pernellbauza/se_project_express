@@ -1,3 +1,6 @@
+require('dotenv').config();
+console.log(process.env.NODE_ENV);
+
 const express = require('express');
 
 const mongoose = require('mongoose');
@@ -5,6 +8,8 @@ const mongoose = require('mongoose');
 const cors = require("cors");
 
 const { errors } = require("celebrate");
+
+const routes = require("./routes");
 
 const { login, createUser } = require("./controllers/user");
 
@@ -16,8 +21,6 @@ const {
   validateAuth,
   validateCreateUser,
 } = require("./middlewares/validation");
-
-const routes = require("./routes");
 
 const app = express();
 
