@@ -47,7 +47,7 @@ const getCurrentUser = (req, res, next) => {
     .then((user) => res.send(user))
     .catch((err) => {
       console.error(err.name);
-      if (err.name === "DocumentNotFoundError") {
+      if (err.name === "NotFoundError") {
         next(new NotFoundError("User not found"));
       } else {
         next(err);

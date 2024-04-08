@@ -48,7 +48,7 @@ const deleteItem = (req, res, next) => {
       });
     })
     .catch((err) => {
-      if (err.name === `DocumentNotFoundError`) {
+      if (err.name === `NotFoundError`) {
         next(new NotFoundError());
       }
       if (err.name === `CastError`) {
@@ -74,7 +74,7 @@ const likeItem = (req, res, next) => {
     })
     .catch((err) => {
       console.error(err.name);
-      if (err.name === `DocumentNotFoundError`) {
+      if (err.name === `NotFoundError`) {
         next(new NotFoundError());
       }
       if (err.name === `CastError`) {
@@ -100,7 +100,7 @@ const dislikeItem = (req, res, next) => {
     })
     .catch((err) => {
       console.error(err);
-      if (err.name === `DocumentNotFoundError`) {
+      if (err.name === `NotFoundError`) {
         next(new NotFoundError());
       }
       if (err.name === `CastError`) {
