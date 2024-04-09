@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator: (v) => validator.isURL(v),
-      message: "Link is not valid",
+      message: "You must enter a valid URL",
     },
   },
   email: {
@@ -41,28 +41,17 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(
 ) {
   return this.findOne({ email })
     .select("+password")
-    .then((user) => {
-      // not found
-      if (!user) {
-        const error = new Error("user not found");
-        error.name = "INVALID_EMAIL_PASSWORD";
-        return Promise.reject(error);
+    .then((account) => {
+      if (!account) {
+        return Promise.reject(new Error("Incorrect email or password"));
       }
-      console.log(password);
-      if (!password || !email) {
-        const error = new Error("incorrect email or password");
-        error.name = "NO_EMAIL_PASSWORD";
-        return Promise.reject(error);
-      }
-      // found
-      console.log(password, user.password);
-      return bcrypt.compare(password, user.password).then((matched) => {
+
+      return bcrypt.compare(password, account.password).then((matched) => {
         if (!matched) {
-          const error = new Error("email or password didn't match");
-          error.name = "INVALID_EMAIL_PASSWORD";
-          return Promise.reject(error);
+          return Promise.reject(new Error("Incorrect email or password"));
         }
-        return user;
+
+        return account;
       });
     });
 };
